@@ -13,6 +13,51 @@
             color: white;
         }
 
+        /* ---------------------- HERO SECTION ---------------------- */
+        .landing-hero {
+            text-align: center;
+            padding: 80px 20px 40px 20px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .landing-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #22c55e;
+        }
+
+        .landing-hero .subtitle {
+            font-size: 1.2rem;
+            color: #9ca3af;
+            margin-bottom: 20px;
+        }
+
+        .landing-hero .description {
+            font-size: 1rem;
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .open-chat-btn {
+            background: #22c55e;
+            color: #022c22;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .open-chat-btn:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+
+        /* ---------------------- CHAT WIDGET ---------------------- */
         #chat-toggle {
             position: fixed;
             bottom: 22px;
@@ -121,12 +166,27 @@
 
 <body>
 
-<!-- Floating Button -->
+<!-- ---------------------- HERO SECTION ---------------------- -->
+<section class="landing-hero">
+  <h1>Bouncer Bot</h1>
+  <p class="subtitle">Your AI Bouncer for Chats, Communities, and Live Conversations.</p>
+
+  <p class="description">
+    Bouncer Bot protects your platform from toxicity, harassment, spam, and harmful content —
+    all in real time. Try chatting with the bot to see how it moderates, warns, and blocks
+    messages using your strike system and AI pipeline.
+  </p>
+
+  <button class="open-chat-btn" onclick="document.getElementById('chat-toggle').click()">
+    Open Chat Demo
+  </button>
+</section>
+
+<!-- ---------------------- CHAT WIDGET ---------------------- -->
 <button id="chat-toggle">
     <img src="https://icon2.cleanpng.com/20180406/trw/avbrb9fbu.webp">
 </button>
 
-<!-- Chat Window -->
 <div id="chat-box">
     <div class="header">
         <img src="https://icon2.cleanpng.com/20180406/trw/avbrb9fbu.webp">
@@ -144,24 +204,19 @@
     </div>
 </div>
 
+<!-- ---------------------- CHAT LOGIC ---------------------- -->
 <script>
-    // ---------------------------------------------
-    // 1. Create persistent session ID in localStorage
-    // ---------------------------------------------
+    // Persistent session ID
     if (!localStorage.getItem("bouncer_session")) {
         localStorage.setItem("bouncer_session", crypto.randomUUID());
     }
     const sessionId = localStorage.getItem("bouncer_session");
 
-    // ---------------------------------------------
-    // 2. Chat widget behavior
-    // ---------------------------------------------
     const chatToggle = document.getElementById("chat-toggle");
     const chatBox = document.getElementById("chat-box");
     const messagesDiv = document.getElementById("messages");
     const inputField = document.getElementById("input");
 
-    // Fix double-click issue
     chatBox.style.display = "none";
 
     chatToggle.onclick = () => {
@@ -176,9 +231,6 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // ---------------------------------------------
-    // 3. Send message with session_id included
-    // ---------------------------------------------
     async function sendMessage() {
         const text = inputField.value.trim();
         if (!text) return;
@@ -199,16 +251,13 @@
         addMessage(data.reply, "bot");
     }
 
-    // Allow Enter key to send
     inputField.addEventListener("keydown", function(e) {
         if (e.key === "Enter") {
             sendMessage();
         }
     });
 
-    // ---------------------------------------------
-    // 4. Trigger intro handshake
-    // ---------------------------------------------
+    // Intro handshake
     fetch("/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -216,8 +265,9 @@
             message: "__init__",
             session_id: sessionId
         })
-    }).then(res => res.json())
-      .then(data => addMessage("🛡️ Bouncer Bot online. How can I help?", "bot"));
+    })
+    .then(res => res.json())
+    .then(data => addMessage("🛡️ Bouncer Bot online. How can I help?", "bot"));
 </script>
 
 </body>

@@ -10,6 +10,26 @@ BOX_UPLOAD_URL = "https://upload.box.com/api/2.0/files/content"
 BOX_VERSION_UPLOAD_URL = "https://upload.box.com/api/2.0/files/{file_id}/content"
 BOX_SEARCH_URL = "https://api.box.com/2.0/search"
 
+
+# ---------------------------------------------------------
+# DEBUG HELPER — prints EVERYTHING about the request
+# ---------------------------------------------------------
+def debug_request_info(url, headers, files):
+    logger.error("----- BOX DEBUG REQUEST -----")
+    logger.error(f"URL: {url}")
+    logger.error(f"Headers: {headers}")
+
+    for key, value in files.items():
+        if isinstance(value, tuple):
+            name, content, mime = value
+            size = len(content) if content else 0
+            logger.error(f"Field: {key} | Filename: {name} | MIME: {mime} | Size: {size}")
+        else:
+            logger.error(f"Field: {key} | Value: {value}")
+
+    logger.error("----- END BOX DEBUG REQUEST -----")
+
+
 def upload_structured_log(session_id, user_message, ai_message, verdict):
     """
     Stores structured JSON logs in Box:
@@ -86,13 +106,28 @@ def upload_structured_log(session_id, user_message, ai_message, verdict):
         log_data["messages"].append(user_entry)
         log_data["messages"].append(ai_entry)
 
-        # Upload new version
+        # Upload new version (correct multipart format)
         files = {
+            "attributes": (None, json.dumps({
+                "name": filename,
+                "parent": {"id": folder_id}
+            }), "application/json"),
+
+            # FIXED — must be 3‑tuple
+            "parent_id": (None, str(folder_id), "text/plain"),
+
             "file": (filename, json.dumps(log_data).encode("utf-8"), "application/json")
         }
 
         version_url = BOX_VERSION_UPLOAD_URL.format(file_id=file_id)
+
+        # DEBUG
+        debug_request_info(version_url, headers, files)
+
         version_resp = requests.post(version_url, headers=headers, files=files)
+
+        logger.error(f"BOX UPDATE STATUS: {version_resp.status_code}")
+        logger.error(f"BOX UPDATE RESPONSE: {version_resp.text}")
 
         if version_resp.status_code in (200, 201):
             logger.info(f"Updated session log: {filename}")
@@ -113,17 +148,24 @@ def upload_structured_log(session_id, user_message, ai_message, verdict):
     }
 
     files = {
+        "attributes": (None, json.dumps({
+            "name": filename,
+            "parent": {"id": folder_id}
+        }), "application/json"),
+
+        # FIXED — must be 3‑tuple
+        "parent_id": (None, str(folder_id), "text/plain"),
+
         "file": (filename, json.dumps(new_log).encode("utf-8"), "application/json")
     }
 
-    data = {
-        "attributes": json.dumps({
-            "name": filename,
-            "parent": {"id": folder_id}
-        })
-    }
+    # DEBUG
+    debug_request_info(BOX_UPLOAD_URL, headers, files)
 
-    create_resp = requests.post(BOX_UPLOAD_URL, headers=headers, files=files, data=data)
+    create_resp = requests.post(BOX_UPLOAD_URL, headers=headers, files=files)
+
+    logger.error(f"BOX CREATE STATUS: {create_resp.status_code}")
+    logger.error(f"BOX CREATE RESPONSE: {create_resp.text}")
 
     if create_resp.status_code in (200, 201):
         logger.info(f"Created new session log in Box: {filename}")

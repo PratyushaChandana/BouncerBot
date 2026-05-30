@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+core/__pycache__/
+core/__pycache__/*
+
+# Virtual environments
+venv/
+env/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python bytecode
+*.pyc
+*.pyo
+*.pyd
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment variables
+.env
+*.env
+
+# Box tokens or secrets (safety)
+BOX_DEVELOPER_TOKEN
